@@ -48,6 +48,13 @@ subprojects {
         maven("https://maven.nucleoid.xyz/") {
             name = "nucleoid"
         }
+        maven {
+            credentials {
+                username = providers.gradleProperty("lgNexusUser").get()
+                password = providers.gradleProperty("lgNexusPass").get()
+            }
+            url = uri("https://repo.lemongaming.ltd/repository/maven-public/")
+        }
     }
 
     tasks.named("processResources", Copy::class.java) {
