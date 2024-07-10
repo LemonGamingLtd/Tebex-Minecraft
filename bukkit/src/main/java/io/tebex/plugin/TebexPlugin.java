@@ -21,6 +21,8 @@ import io.tebex.sdk.platform.config.ServerPlatformConfig;
 import io.tebex.sdk.request.response.ServerInformation;
 import io.tebex.sdk.util.CommandResult;
 import io.tebex.sdk.util.FileUtils;
+import me.nahu.scheduler.wrapper.WrappedScheduler;
+import me.nahu.scheduler.wrapper.WrappedSchedulerBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandException;
@@ -46,6 +48,8 @@ import java.util.regex.Pattern;
  * The Bukkit platform.
  */
 public final class TebexPlugin extends JavaPlugin implements Platform {
+    private WrappedScheduler wrappedScheduler;
+
     private SDK sdk;
     private ServerPlatformConfig config;
     private boolean setup;
@@ -63,6 +67,9 @@ public final class TebexPlugin extends JavaPlugin implements Platform {
      */
     @Override
     public void onEnable() {
+        wrappedScheduler = WrappedSchedulerBuilder.builder().plugin(this).build();
+        log(Level.INFO, "Successfully initialized scheduler of type: " + wrappedScheduler.getImplementationType());
+
         // Bind SDK.
         Tebex.init(this);
 
@@ -100,14 +107,14 @@ public final class TebexPlugin extends JavaPlugin implements Platform {
 
         registerEvents(new JoinListener(this));
 
-        getServer().getScheduler().runTaskTimerAsynchronously(this, this::refreshListings, 0, 20 * 60 * 5);
+        getWrappedScheduler().runTaskTimerAsynchronously(this::refreshListings, 0, 20 * 60 * 5);
 
         // every 10 minutes clear the plugin event queue
-        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+        getWrappedScheduler().runTaskTimerAsynchronously(() -> {
             this.getSDK().sendPluginEvents();
         }, 0, 60 * 20 * 10);
 
-        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+        getWrappedScheduler().runTaskTimerAsynchronously(() -> {
             List<ServerEvent> runEvents = Lists.newArrayList(serverEvents.subList(0, Math.min(serverEvents.size(), 750)));
             if (runEvents.isEmpty()) return;
             if (!this.isSetup()) return;
@@ -136,6 +143,10 @@ public final class TebexPlugin extends JavaPlugin implements Platform {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException("Failed to get the CommandMap", e);
         }
+    }
+
+    public WrappedScheduler getWrappedScheduler() {
+        return wrappedScheduler;
     }
 
     public List<Category> getStoreCategories() {
@@ -316,28 +327,28 @@ public final class TebexPlugin extends JavaPlugin implements Platform {
     public void executeAsync(Runnable runnable) {
         if (!isEnabled()) return;
 
-        getServer().getScheduler().runTaskAsynchronously(this, runnable);
+        getWrappedScheduler().runTaskAsynchronously(runnable);
     }
 
     @Override
     public void executeAsyncLater(Runnable runnable, long time, TimeUnit unit) {
         if (!isEnabled()) return;
 
-        getServer().getScheduler().runTaskLaterAsynchronously(this, runnable, unit.toMillis(time) / 50);
+        getWrappedScheduler().runTaskLaterAsynchronously(runnable, Math.max(1, unit.toMillis(time) / 50));
     }
 
     @Override
     public void executeBlocking(Runnable runnable) {
         if (!isEnabled()) return;
 
-        getServer().getScheduler().runTask(this, runnable);
+        getWrappedScheduler().runTask(runnable);
     }
 
     @Override
     public void executeBlockingLater(Runnable runnable, long time, TimeUnit unit) {
         if (!isEnabled()) return;
 
-        getServer().getScheduler().runTaskLater(this, runnable, unit.toMillis(time) / 50);
+        getWrappedScheduler().runTaskLater(runnable, Math.max(1, unit.toMillis(time) / 50));
     }
 
     public Player getPlayer(Object player) {

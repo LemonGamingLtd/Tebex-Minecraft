@@ -10,6 +10,7 @@ dependencies {
     implementation("dev.triumphteam:triumph-gui:3.1.10") {
         exclude("com.google.gson")
     }
+    implementation("me.nahu.wrapper:folia-scheduler-wrapper:0.0.3")
 
     compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     compileOnly("dev.dejvokep:boosted-yaml:1.3")
@@ -28,6 +29,8 @@ tasks.named("shadowJar", ShadowJar::class.java) {
     relocate("org.jetbrains.annotations", "io.tebex.plugin.libs.jetbrains")
     relocate("kotlin", "io.tebex.plugin.libs.kotlin")
     relocate("com.github.benmanes.caffeine", "io.tebex.plugin.libs.caffeine")
+    relocate("com.google.gson", "io.tebex.plugin.libs.gson")
+    relocate("me.nahu.scheduler", "io.tebex.plugin.libs.scheduler")
     minimize()
 }
 
