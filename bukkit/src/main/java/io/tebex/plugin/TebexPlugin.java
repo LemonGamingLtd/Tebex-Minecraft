@@ -322,7 +322,7 @@ public final class TebexPlugin extends JavaPlugin implements Platform {
     public void executeAsyncLater(Runnable runnable, long time, TimeUnit unit) {
         if (!isEnabled()) return;
 
-        getWrappedScheduler().runTaskLaterAsynchronously(runnable, unit.toMillis(time) / 50);
+        getWrappedScheduler().runTaskLaterAsynchronously(runnable, Math.max(1, unit.toMillis(time) / 50));
     }
 
     @Override
@@ -336,7 +336,7 @@ public final class TebexPlugin extends JavaPlugin implements Platform {
     public void executeBlockingLater(Runnable runnable, long time, TimeUnit unit) {
         if (!isEnabled()) return;
 
-        getWrappedScheduler().runTaskLater(runnable, unit.toMillis(time) / 50);
+        getWrappedScheduler().runTaskLater(runnable, Math.max(1, unit.toMillis(time) / 50));
     }
 
     public Player getPlayer(Object player) {
